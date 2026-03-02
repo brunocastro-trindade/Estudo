@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aula 01 — JavaScript & DOM</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fafaf7;
+    --ink: #1a1a1a;
+    --muted: #888;
+    --border: #e0ddd6;
+    --accent: #d4440c;
+    --accent-light: #fff0eb;
+    --code-bg: #1e1e2e;
+    --surface: #ffffff;
+    --highlight: #fffae8;
+    --green: #1a7a4a;
+    --green-light: #edfbf3;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  /* ---- HEADER ---- */
+  .hero {
+    background: var(--ink);
+    color: white;
+    padding: 64px 24px 56px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: 'JS';
+    position: absolute;
+    font-family: 'DM Mono', monospace;
+    font-size: 240px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.04);
+    right: -20px;
+    top: -40px;
+    user-select: none;
+  }
+
+  .hero .lesson-tag {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.2rem, 6vw, 4rem);
+    font-weight: 400;
+    line-height: 1.15;
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+  }
+
+  .hero p {
+    color: #aaa;
+    max-width: 520px;
+    margin: 0 auto;
+    font-size: 1rem;
+  }
+
+  /* ---- TEACHER BAR ---- */
+  .teacher-bar {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.875rem;
+    color: var(--muted);
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .teacher-bar span { display: flex; align-items: center; gap: 6px; }
+
+  /* ---- MAIN LAYOUT ---- */
+  .page { max-width: 820px; margin: 0 auto; padding: 0 24px 80px; }
+
+  /* ---- LESSON SECTIONS ---- */
+  .lesson-block {
+    padding: 48px 0;
+    border-bottom: 1px solid var(--border);
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+
+  .lesson-block.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+
+  h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.9rem;
+    font-weight: 400;
+    line-height: 1.2;
+    margin-bottom: 20px;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    color: #3a3a3a;
+    margin-bottom: 16px;
+    font-size: 1rem;
+    line-height: 1.8;
+  }
+
+  strong { color: var(--ink); font-weight: 600; }
+
+  em { font-style: italic; color: #555; }
+
+  /* ---- DIALOGUE BOXES (teacher speaking) ---- */
+  .professor-fala {
+    background: var(--highlight);
+    border-left: 3px solid #f0c040;
+    padding: 20px 24px;
+    margin: 24px 0;
+    border-radius: 0 4px 4px 0;
+  }
+
+  .professor-fala .quem {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #b08000;
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 8px;
+  }
+
+  .professor-fala p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #4a3a00;
+  }
+
+  /* ---- CODE BLOCKS ---- */
+  .code-wrapper {
+    background: var(--code-bg);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 24px 0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  }
+
+  .code-header {
+    background: #2a2a3e;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .code-dots { display: flex; gap: 6px; }
+  .code-dots span { width: 10px; height: 10px; border-radius: 50%; }
+  .code-dots span:nth-child(1) { background: #ff5f57; }
+  .code-dots span:nth-child(2) { background: #ffbd2e; }
+  .code-dots span:nth-child(3) { background: #28c840; }
+
+  .code-filename {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: #888;
+    margin-left: 4px;
+  }
+
+  pre {
+    padding: 24px;
+    overflow-x: auto;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.875rem;
+    line-height: 1.9;
+    color: #cdd6f4;
+  }
+
+  .kw { color: #cba6f7; }
+  .fn { color: #89b4fa; }
+  .str { color: #a6e3a1; }
+  .sel { color: #f38ba8; }
+  .cmt { color: #585b70; font-style: italic; }
+  .prop { color: #fab387; }
+  .num { color: #fab387; }
+
+  /* ---- ANNOTATION ---- */
+  .annotation {
+    display: flex;
+    gap: 12px;
+    margin: -12px 0 24px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: none;
+    font-size: 0.875rem;
+    color: #555;
+    align-items: flex-start;
+  }
+
+  .annotation .icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+
+  /* ---- CONCEPT TABLE ---- */
+  .concept-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  @media (max-width: 600px) { .concept-row { grid-template-columns: 1fr; } }
+
+  .concept-item {
+    border: 1px solid var(--border);
+    padding: 20px;
+    background: var(--surface);
+    transition: border-color 0.2s, transform 0.2s;
+    cursor: default;
+  }
+
+  .concept-item:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .concept-item .ci-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  .concept-item h3 { font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
+  .concept-item p { font-size: 0.875rem; color: #666; margin: 0; }
+
+  /* ---- INTERACTIVE DEMO ---- */
+  .demo-area {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 24px 0;
+  }
+
+  .demo-topbar {
+    background: #f0ede6;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .demo-topbar span {
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+  }
+
+  .demo-live-badge {
+    background: var(--green);
+    color: white;
+    font-size: 10px;
+    padding: 2px 8px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .demo-live-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #7dffc0;
+    animation: pulse 1.5s infinite;
+  }
+
+  .demo-content { padding: 28px; }
+
+  /* DEMO 1 */
+  #demo1-box {
+    background: #f5f3ef;
+    border: 1px solid #e0ddd6;
+    padding: 24px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  #demo1-texto {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 12px;
+  }
+
+  #demo1-cor {
+    font-size: 0.875rem;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .btn-demo {
+    background: var(--ink);
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    margin: 4px;
+    border-radius: 3px;
+  }
+
+  .btn-demo:hover { background: var(--accent); }
+  .btn-demo:active { transform: scale(0.97); }
+
+  /* DEMO 2 */
+  #demo2-lista {
+    list-style: none;
+    margin-bottom: 16px;
+  }
+
+  #demo2-lista li {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg);
+    transition: all 0.3s;
+  }
+
+  #demo2-lista li.added {
+    animation: slideIn 0.3s ease;
+    border-color: var(--green);
+    background: var(--green-light);
+  }
+
+  #demo2-lista li button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: color 0.2s;
+  }
+
+  #demo2-lista li button:hover { color: var(--accent); }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .input-row input {
+    flex: 1;
+    border: 1px solid var(--border);
+    padding: 9px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.2s;
+    border-radius: 3px;
+  }
+
+  .input-row input:focus { border-color: var(--accent); }
+
+  /* ---- HIGHLIGHT CALLOUT ---- */
+  .insight {
+    background: var(--accent-light);
+    border: 1px solid #f0c0b0;
+    padding: 20px 24px;
+    margin: 24px 0;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .insight .icon { font-size: 1.3rem; flex-shrink: 0; }
+  .insight p { margin: 0; font-size: 0.925rem; color: #5a1a00; }
+
+  /* ---- TASK SECTION ---- */
+  .task-section {
+    background: var(--ink);
+    color: white;
+    padding: 48px;
+    margin-top: 48px;
+    border-radius: 6px;
+  }
+
+  .task-section .section-label { color: #7dffc0; }
+
+  .task-section h2 {
+    font-family: 'DM Serif Display', serif;
+    color: white;
+    margin-bottom: 12px;
+  }
+
+  .task-section p { color: #aaa; }
+
+  .step-list { list-style: none; padding: 0; margin: 24px 0; }
+
+  .step-list li {
+    display: flex;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid #2a2a2a;
+    align-items: flex-start;
+  }
+
+  .step-list li:last-child { border: none; }
+
+  .step-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: #000;
+    background: #7dffc0;
+    width: 26px; height: 26px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    border-radius: 2px;
+    margin-top: 2px;
+  }
+
+  .step-list li .step-text {
+    font-size: 0.95rem;
+    color: #ccc;
+    line-height: 1.7;
+  }
+
+  .step-list li .step-text strong { color: white; }
+
+  .dica-task {
+    background: #1a1a1a;
+    border-left: 2px solid #7dffc0;
+    padding: 16px 20px;
+    font-size: 0.875rem;
+    color: #888;
+    margin-top: 8px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .dica-task strong { color: #7dffc0; display: block; margin-bottom: 4px; }
+
+  /* ---- CONCEPT RECAP ---- */
+  .recap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 28px;
+    margin: 24px 0;
+  }
+
+  .recap h3 {
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 20px;
+  }
+
+  .recap-grid { display: flex; flex-direction: column; gap: 12px; }
+
+  .recap-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 0.9rem;
+  }
+
+  .recap-item code {
+    font-family: 'DM Mono', monospace;
+    background: #f0ede6;
+    padding: 2px 8px;
+    font-size: 0.8rem;
+    color: var(--accent);
+    white-space: nowrap;
+    flex-shrink: 0;
+    border-radius: 2px;
+  }
+
+  .recap-item span { color: #555; line-height: 1.5; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="lesson-tag">Aula 01 · JavaScript</div>
+  <h1>O JavaScript que<br>realmente importa</h1>
+  <p>Nesta aula você vai aprender a fazer páginas reagirem às suas ações — e vai construir algo funcional do zero.</p>
+</div>
+
+<div class="teacher-bar">
+  <span>📖 Nível: iniciante absoluto</span>
+  <span>⏱️ Duração estimada: 45–60 min</span>
+  <span>🎯 Foco: DOM + eventos</span>
+</div>
+
+<div class="page">
+
+  <!-- BLOCO 1: O QUE É JS -->
+  <div class="lesson-block">
+    <div class="section-label">// 01 — contexto</div>
+    <h2>Por que JavaScript existe?</h2>
+
+    <div class="professor-fala">
+      <div class="quem">👨‍🏫 Professor</div>
+      <p>Imagina que você chegou num site bonito, clicou num botão e <em>nada aconteceu</em>. Parece morto, né? Isso é uma página só com HTML e CSS. Agora imagina que ao clicar o botão muda de cor, aparece uma mensagem, um item é adicionado numa lista... Isso é JavaScript fazendo seu trabalho.</p>
+    </div>
+
+    <p>HTML é a <strong>estrutura</strong> — os ossos. CSS é a <strong>aparência</strong> — a roupa. JavaScript é o <strong>comportamento</strong> — o movimento. Toda interação que você já viu num site (menus que abrem, formulários que validam, animações que respondem ao clique) tem JavaScript por baixo.</p>
+
+    <div class="concept-row">
+      <div class="concept-item">
+        <div class="ci-label">HTML</div>
+        <h3>Estrutura</h3>
+        <p>Define o que existe na página: títulos, parágrafos, botões, imagens. O esqueleto.</p>
+      </div>
+      <div class="concept-item">
+        <div class="ci-label">CSS</div>
+        <h3>Aparência</h3>
+        <p>Define como as coisas parecem: cores, tamanhos, posições, animações visuais.</p>
+      </div>
+      <div class="concept-item">
+        <div class="ci-label">JavaScript</div>
+        <h3>Comportamento</h3>
+        <p>Define o que acontece quando o usuário age: clica, digita, move o mouse.</p>
+      </div>
+      <div class="concept-item">
+        <div class="ci-label">DOM</div>
+        <h3>A ponte</h3>
+        <p>O DOM é a representação da página que o JS usa para acessar e modificar qualquer elemento.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOCO 2: DOM -->
+  <div class="lesson-block">
+    <div class="section-label">// 02 — conceito fundamental</div>
+    <h2>O que diabos é o DOM?</h2>
+
+    <div class="professor-fala">
+      <div class="quem">👨‍🏫 Professor</div>
+      <p>DOM significa <em>Document Object Model</em>. Esquece o nome por agora. O que importa é: quando o navegador lê seu HTML, ele transforma tudo numa <strong>árvore de objetos</strong>. Cada elemento vira um objeto que o JavaScript pode acessar, modificar ou remover. É como se o JavaScript tivesse um mapa de toda sua página.</p>
+    </div>
+
+    <p>Pensa assim: seu HTML tem um <code>&lt;h1&gt;</code> com o texto "Olá". O DOM é o que permite que você pegue esse <code>&lt;h1&gt;</code> usando JavaScript e mude o texto para "Oi, mundo!" sem recarregar a página.</p>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <span class="code-filename">index.html</span>
+      </div>
+      <pre><span class="cmt">&lt;!-- Esse é o seu HTML --&gt;</span>
+&lt;<span class="kw">h1</span> <span class="prop">id</span>=<span class="str">"meu-titulo"</span>&gt;Olá&lt;/<span class="kw">h1</span>&gt;
+&lt;<span class="kw">button</span> <span class="prop">id</span>=<span class="str">"meu-botao"</span>&gt;Clica aqui&lt;/<span class="kw">button</span>&gt;
+
+<span class="cmt">&lt;!-- O JavaScript fica aqui embaixo --&gt;</span>
+&lt;<span class="kw">script</span>&gt;
+  <span class="cmt">// 1. Pega o elemento pelo id</span>
+  <span class="kw">const</span> <span class="fn">titulo</span> = <span class="fn">document</span>.<span class="fn">getElementById</span>(<span class="str">"meu-titulo"</span>)
+
+  <span class="cmt">// 2. Pega o botão</span>
+  <span class="kw">const</span> <span class="fn">botao</span> = <span class="fn">document</span>.<span class="fn">getElementById</span>(<span class="str">"meu-botao"</span>)
+
+  <span class="cmt">// 3. Diz o que acontece quando clicar</span>
+  <span class="fn">botao</span>.<span class="fn">addEventListener</span>(<span class="str">"click"</span>, <span class="kw">function</span>() {
+    <span class="fn">titulo</span>.<span class="prop">textContent</span> = <span class="str">"Você clicou!"</span>
+  })
+&lt;/<span class="kw">script</span>&gt;</pre>
+    </div>
+
+    <div class="annotation">
+      <span class="icon">🔍</span>
+      <span><strong>Leia linha a linha:</strong> <code>document.getElementById("meu-titulo")</code> está dizendo — <em>"ei, documento, me dá o elemento que tem id igual a 'meu-titulo'"</em>. Simples assim. O <code>addEventListener("click", ...)</code> está dizendo — <em>"quando alguém clicar nesse botão, execute essa função"</em>.</span>
+    </div>
+
+    <!-- DEMO 1 -->
+    <p>Isso não é abstrato. Veja funcionando agora:</p>
+
+    <div class="demo-area">
+      <div class="demo-topbar">
+        <span>demo_01.html</span>
+        <span class="demo-live-badge">Live</span>
+      </div>
+      <div class="demo-content">
+        <div id="demo1-box">
+          <div id="demo1-texto">Eu sou um título</div>
+          <div id="demo1-cor">cor: #333333</div>
+        </div>
+        <button class="btn-demo" id="btn-muda-texto">Mudar texto</button>
+        <button class="btn-demo" id="btn-muda-cor">Mudar cor</button>
+        <button class="btn-demo" id="btn-reset">↺ Resetar</button>
+      </div>
+    </div>
+
+    <div class="insight">
+      <span class="icon">🧠</span>
+      <p>Percebeu? O botão <strong>não recarregou a página</strong>. O JavaScript pegou o elemento já existente no DOM e alterou suas propriedades. Isso é exatamente o que você vai aprender a fazer.</p>
+    </div>
+  </div>
+
+  <!-- BLOCO 3: SELETORES -->
+  <div class="lesson-block">
+    <div class="section-label">// 03 — como selecionar elementos</div>
+    <h2>Três formas de achar um elemento</h2>
+
+    <div class="professor-fala">
+      <div class="quem">👨‍🏫 Professor</div>
+      <p>Antes de modificar qualquer coisa, você precisa achar o elemento. É como procurar um livro numa biblioteca — você pode procurar pelo número da prateleira, pelo título, ou pelo assunto. No DOM temos três jeitos principais.</p>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <span class="code-filename">seletores.js</span>
+      </div>
+      <pre><span class="cmt">// JEITO 1: pelo ID (único — só um elemento por id)</span>
+<span class="kw">const</span> <span class="fn">titulo</span> = <span class="fn">document</span>.<span class="fn">getElementById</span>(<span class="str">"meu-id"</span>)
+
+<span class="cmt">// JEITO 2: pela classe (pode pegar vários)</span>
+<span class="kw">const</span> <span class="fn">itens</span> = <span class="fn">document</span>.<span class="fn">querySelectorAll</span>(<span class="str">".minha-classe"</span>)
+
+<span class="cmt">// JEITO 3: querySelector (usa seletor CSS — mais flexível)</span>
+<span class="kw">const</span> <span class="fn">primeiro</span> = <span class="fn">document</span>.<span class="fn">querySelector</span>(<span class="str">"#lista li:first-child"</span>)</pre>
+    </div>
+
+    <p>Na prática, <strong>você vai usar <code>getElementById</code> e <code>querySelector</code> 90% do tempo</strong>. O <code>querySelector</code> é o mais poderoso porque aceita qualquer seletor CSS.</p>
+
+    <div class="recap">
+      <h3>// Propriedades mais usadas para modificar elementos</h3>
+      <div class="recap-grid">
+        <div class="recap-item">
+          <code>.textContent</code>
+          <span>Modifica o texto dentro de um elemento. <em>"Olá"</em> vira o que você quiser.</span>
+        </div>
+        <div class="recap-item">
+          <code>.innerHTML</code>
+          <span>Modifica o HTML interno — permite inserir tags dentro do elemento.</span>
+        </div>
+        <div class="recap-item">
+          <code>.style.propriedade</code>
+          <span>Modifica qualquer estilo CSS diretamente. Ex: <code>.style.color = "red"</code></span>
+        </div>
+        <div class="recap-item">
+          <code>.classList</code>
+          <span>Adiciona, remove ou alterna classes CSS. Muito usado para mostrar/esconder coisas.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOCO 4: EVENTOS -->
+  <div class="lesson-block">
+    <div class="section-label">// 04 — eventos: como reagir ao usuário</div>
+    <h2>Eventos são a alma do JavaScript</h2>
+
+    <div class="professor-fala">
+      <div class="quem">👨‍🏫 Professor</div>
+      <p>Um <strong>evento</strong> é qualquer coisa que acontece na página: um clique, uma tecla pressionada, o mouse passando em cima de algo, o usuário digitando num input. O JavaScript fica "escutando" esses eventos e executa uma função quando eles acontecem. Por isso usamos <code>addEventListener</code> — você está dizendo ao navegador: <em>"fique de olho nisso e avise quando acontecer"</em>.</p>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <span class="code-filename">eventos.js</span>
+      </div>
+      <pre><span class="kw">const</span> <span class="fn">input</span> = <span class="fn">document</span>.<span class="fn">querySelector</span>(<span class="str">"#meu-input"</span>)
+<span class="kw">const</span> <span class="fn">lista</span> = <span class="fn">document</span>.<span class="fn">querySelector</span>(<span class="str">"#minha-lista"</span>)
+
+<span class="fn">input</span>.<span class="fn">addEventListener</span>(<span class="str">"keydown"</span>, <span class="kw">function</span>(<span class="fn">evento</span>) {
+  <span class="cmt">// O parâmetro "evento" carrega informações sobre o que aconteceu</span>
+  <span class="kw">if</span> (<span class="fn">evento</span>.<span class="prop">key</span> === <span class="str">"Enter"</span>) {
+    <span class="kw">const</span> <span class="fn">texto</span> = <span class="fn">input</span>.<span class="prop">value</span>  <span class="cmt">// pega o que foi digitado</span>
+
+    <span class="kw">if</span> (<span class="fn">texto</span> !== <span class="str">""</span>) {
+      <span class="kw">const</span> <span class="fn">item</span> = <span class="fn">document</span>.<span class="fn">createElement</span>(<span class="str">"li"</span>)  <span class="cmt">// cria elemento novo</span>
+      <span class="fn">item</span>.<span class="prop">textContent</span> = <span class="fn">texto</span>
+      <span class="fn">lista</span>.<span class="fn">appendChild</span>(<span class="fn">item</span>)  <span class="cmt">// adiciona na lista</span>
+      <span class="fn">input</span>.<span class="prop">value</span> = <span class="str">""</span>  <span class="cmt">// limpa o campo</span>
+    }
+  }
+})</pre>
+    </div>
+
+    <div class="annotation">
+      <span class="icon">💡</span>
+      <span>Preste atenção no <code>document.createElement("li")</code> — isso <strong>cria um novo elemento HTML do nada</strong>, via JavaScript. Depois <code>appendChild</code> coloca ele dentro de outro elemento. Isso é a base de como frameworks modernos como React funcionam por baixo dos panos.</span>
+    </div>
+
+    <!-- DEMO 2 -->
+    <p>Experimente abaixo — a lista funciona com o código que você acabou de ler:</p>
+
+    <div class="demo-area">
+      <div class="demo-topbar">
+        <span>demo_02.html</span>
+        <span class="demo-live-badge">Live</span>
+      </div>
+      <div class="demo-content">
+        <ul id="demo2-lista">
+          <li>Aprendi HTML <button onclick="this.parentElement.remove()">✕</button></li>
+          <li>Aprendi CSS <button onclick="this.parentElement.remove()">✕</button></li>
+        </ul>
+        <div class="input-row">
+          <input type="text" id="demo2-input" placeholder="Digite algo e pressione Enter ou clique em +" />
+          <button class="btn-demo" id="demo2-add">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOCO 5: TAREFA -->
+  <div class="lesson-block">
+    <div class="section-label">// 05 — hora de construir</div>
+    <h2>Sua atividade prática</h2>
+
+    <div class="professor-fala">
+      <div class="quem">👨‍🏫 Professor</div>
+      <p>Tudo que você aprendeu até aqui — selecionar elementos, modificar propriedades e reagir a eventos — é suficiente para construir algo real. A tarefa é criar um <strong>Mini App de Lista de Habilidades</strong>. Parece simples? É. E é exatamente por isso que é perfeito para fixar o que você aprendeu.</p>
+    </div>
+
+    <div class="task-section">
+      <div class="section-label">// tarefa</div>
+      <h2>Mini App: Lista de Habilidades</h2>
+      <p>Crie um único arquivo <code>index.html</code> com HTML, CSS e JavaScript que faça o seguinte:</p>
+
+      <ul class="step-list">
+        <li>
+          <span class="step-num">1</span>
+          <div class="step-text">
+            <strong>Estrutura HTML:</strong> crie um título, um campo de texto (<code>input</code>), um botão "Adicionar" e uma lista vazia (<code>ul</code>) onde os itens vão aparecer.
+          </div>
+        </li>
+        <li>
+          <span class="step-num">2</span>
+          <div class="step-text">
+            <strong>Estilo CSS:</strong> dê um visual agradável — não precisa ser elaborado, mas mostre que você pensou na apresentação. Centralizar na tela já vai bem.
+          </div>
+        </li>
+        <li>
+          <span class="step-num">3</span>
+          <div class="step-text">
+            <strong>Adicionar item:</strong> quando o usuário clicar no botão (ou pressionar Enter), o texto do input deve aparecer como um novo item na lista.
+          </div>
+        </li>
+        <li>
+          <span class="step-num">4</span>
+          <div class="step-text">
+            <strong>Remover item:</strong> cada item da lista deve ter um botão "×" ao lado. Ao clicar, o item deve ser removido da lista.
+          </div>
+        </li>
+        <li>
+          <span class="step-num">5</span>
+          <div class="step-text">
+            <strong>Validação simples:</strong> não permita adicionar itens vazios. Se o campo estiver em branco, não faça nada (ou mostre uma mensagem).
+            <div class="dica-task">
+              <strong>// dica do professor:</strong>
+              Use <code>if (input.value.trim() !== "")</code> para checar se tem texto. O <code>.trim()</code> remove espaços em branco do início e fim.
+            </div>
+          </div>
+        </li>
+        <li>
+          <span class="step-num">★</span>
+          <div class="step-text">
+            <strong>Desafio bônus:</strong> adicione um contador que mostra quantos itens estão na lista. Atualize ele toda vez que adicionar ou remover.
+            <div class="dica-task">
+              <strong>// dica do professor:</strong>
+              Use <code>lista.children.length</code> para saber quantos filhos um elemento tem. Atualize um elemento de texto com esse valor após cada ação.
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="insight" style="margin-top: 32px;">
+      <span class="icon">🎯</span>
+      <p>O objetivo não é ter um resultado perfeito — é perceber que você consegue fazer uma página <em>fazer algo</em>. Cada bug que você resolve, cada comportamento que funciona como você imaginou, é você aprendendo a pensar como programador.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ---- INTERSECTION OBSERVER para animações de entrada ----
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible')
+        observer.unobserve(e.target)
+      }
+    })
+  }, { threshold: 0.1 })
+
+  document.querySelectorAll('.lesson-block').forEach(el => observer.observe(el))
+
+  // ---- DEMO 1: mudar texto e cor ----
+  const demo1Texto = document.getElementById('demo1-texto')
+  const demo1Cor   = document.getElementById('demo1-cor')
+
+  const textos = ['Eu sou um título', 'JavaScript mudou isso!', 'O DOM é incrível!', 'Você tá aprendendo!']
+  const cores  = ['#333333', '#d4440c', '#1a7a4a', '#4a20aa']
+  let idx = 0
+
+  document.getElementById('btn-muda-texto').addEventListener('click', function() {
+    idx = (idx + 1) % textos.length
+    demo1Texto.textContent = textos[idx]
+  })
+
+  document.getElementById('btn-muda-cor').addEventListener('click', function() {
+    const c = cores[Math.floor(Math.random() * cores.length)]
+    demo1Texto.style.color = c
+    demo1Cor.textContent = 'cor: ' + c
+  })
+
+  document.getElementById('btn-reset').addEventListener('click', function() {
+    idx = 0
+    demo1Texto.textContent = textos[0]
+    demo1Texto.style.color = ''
+    demo1Cor.textContent = 'cor: #333333'
+  })
+
+  // ---- DEMO 2: lista interativa ----
+  function adicionarItem() {
+    const input = document.getElementById('demo2-input')
+    const lista = document.getElementById('demo2-lista')
+    const texto = input.value.trim()
+
+    if (texto === '') return
+
+    const li = document.createElement('li')
+    li.classList.add('added')
+    li.innerHTML = texto + ' <button onclick="this.parentElement.remove()">✕</button>'
+    lista.appendChild(li)
+    input.value = ''
+    input.focus()
+  }
+
+  document.getElementById('demo2-add').addEventListener('click', adicionarItem)
+  document.getElementById('demo2-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') adicionarItem()
+  })
+</script>
+</body>
+</html>
